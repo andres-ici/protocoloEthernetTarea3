@@ -1,12 +1,13 @@
 #include <stdio.h>
 #include <cstring>
-
+#include <cstdio>
 
 #define BYTE unasigned char
 
 //Functions
 
-void readFromFile();
+//void readFromFile();
+void readFile(const char* filePath);
 
 int main(int argc, char* argv[]) {
     // Print the number of command line arguments entered
@@ -39,6 +40,11 @@ int main(int argc, char* argv[]) {
         printf("Error con el Nodo\n");
     }
 
+
+    const char* filePath = "C:/Users/pepem/Documents/protocoloEthernetTarea3/nodo_1.txt"; // Replace "example.txt" with your file path
+    readFile(filePath);
+
+
     // Return 0 to indicate successful program execution
     return 0;
     
@@ -46,31 +52,45 @@ int main(int argc, char* argv[]) {
 
 //Fuctions
 
-void readFromFile(){ 
+// void readFromFile(){ 
 
-    FILE * fp;
-    char * line = NULL;
-    size_t len = 0;
-    ssize_t read;
+//     FILE * fp;
+//     char * line = NULL;
+//     size_t len = 0;
+//     ssize_t read;
 
-    fp = fopen("nodo_1.txt", "r");
+//     fp = fopen("nodo_1.txt", "r");
 
-    if(fp == NULL){
+//     if(fp == NULL){
 
-        printf("Error open file\n");
+//         printf("Error open file\n");
+//         return;
+
+//     }
+
+//     while((read = getline(&line, &len, fp)) != -1){
+
+//         printf("%s",line);
+
+//     }
+
+//     fclose(fp);
+
+// }
+
+
+void readFile(const char* filePath) {
+    FILE* inputFile = fopen(filePath, "r");
+    if (inputFile == nullptr) {
+        printf("Failed to open the file.\n");
         return;
-
     }
 
-    while((read = getline(&line, &len, fp)) != -1){
-
-        printf("%s",line);
-
+    char line[256];
+    while (fgets(line, sizeof(line), inputFile) != nullptr) {
+        printf("%s", line);
     }
 
-    fclose(fp);
-
+    fclose(inputFile);
 }
-
-
 
