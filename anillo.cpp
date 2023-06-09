@@ -1,7 +1,12 @@
 #include <stdio.h>
 #include <cstring>
 
+
 #define BYTE unasigned char
+
+//Functions
+
+void readFromFile();
 
 int main(int argc, char* argv[]) {
     // Print the number of command line arguments entered
@@ -37,6 +42,34 @@ int main(int argc, char* argv[]) {
     // Return 0 to indicate successful program execution
     return 0;
     
+}
+
+//Fuctions
+
+void readFromFile(){ 
+
+    FILE * fp;
+    char * line = NULL;
+    size_t len = 0;
+    ssize_t read;
+
+    fp = fopen("nodo_1.txt", "r");
+
+    if(fp == NULL){
+
+        printf("Error open file\n");
+        return;
+
+    }
+
+    while((read = getline(&line, &len, fp)) != -1){
+
+        printf("%s",line);
+
+    }
+
+    fclose(fp);
+
 }
 
 
