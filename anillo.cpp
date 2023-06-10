@@ -5,8 +5,6 @@
 #define BYTE unasigned char
 
 //Functions
-
-//void readFromFile();
 void readFile(const char* filePath, char* variables[4]);
 
 
@@ -65,33 +63,6 @@ int main(int argc, char* argv[]) {
 
 //Fuctions
 
-// void readFromFile(){ 
-
-//     FILE * fp;
-//     char * line = NULL;
-//     size_t len = 0;
-//     ssize_t read;
-
-//     fp = fopen("nodo_1.txt", "r");
-
-//     if(fp == NULL){
-
-//         printf("Error open file\n");
-//         return;
-
-//     }
-
-//     while((read = getline(&line, &len, fp)) != -1){
-
-//         printf("%s",line);
-
-//     }
-
-//     fclose(fp);
-
-// }
-
-
 void readFile(const char* filePath, char* variables[4]) {
     int lineNumber = 1; // Start from line 1
     FILE* inputFile = fopen(filePath, "r");
@@ -115,5 +86,6 @@ void readFile(const char* filePath, char* variables[4]) {
     }
 
     fclose(inputFile);
+
 }
 
