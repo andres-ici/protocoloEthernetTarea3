@@ -41,7 +41,7 @@ int main(int argc, char* argv[]) {
     }
 
 
-    const char* filePath = "C:/Users/pepem/Documents/protocoloEthernetTarea3/nodo_1.txt"; // Replace "example.txt" with your file path
+    const char* filePath = "nodo_1.txt"; // Replace "example.txt" with your file path
     readFile(filePath);
 
 
