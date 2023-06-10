@@ -1,1 +1,11 @@
+MAC:
 C0:7E:A2:D4:10:5E
+
+PinIn:
+1
+
+PinOut:
+2
+
+Clock:
+3
