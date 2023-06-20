@@ -10,6 +10,7 @@ void leerArchivo(const char* rutaArchivo, char* variables[4]);
 
 
 char* varTxt[4];
+bool emisor = false;
 
 int main(int argc, char* argv[]) {
     // Print the number of command line arguments entered
@@ -24,8 +25,10 @@ int main(int argc, char* argv[]) {
     // Determine whether the program is running in "emisor" or "receptor" mode
     if (strcmp(argv[2], "1") == 0) {
         printf("Emisor\n");
+        emisor = true;
     } else if (strcmp(argv[2], "0") == 0) {
         printf("Receptor\n");
+        emisor = false;
     } else {
         // Print an error message if the mode is not recognized
         printf("Error con el Modo\n");
@@ -49,13 +52,40 @@ int main(int argc, char* argv[]) {
         printf("Error con el Nodo\n");
     }
 
-    printf("M.A.C: %s\n",varTxt[0]);
-    printf("PinIn: %d\n",*varTxt[1] - 48);
-    printf("PintOut: %d\n",*varTxt[2] - 48);
-    printf("Clock: %d\n",*varTxt[3] - 48);
+    char *MAC = varTxt[0]; //Tambien se puede aplicar el ARREGLO DEL ANDY !!!!!!!!!!!!!!!!!!!!!
+    int PinIn = *varTxt[1] - 48;
+    int PinOut = *varTxt[2] - 48;
+    int Clock = *varTxt[3] - 48;
+
+    printf("M.A.C: %s\n",MAC);
+    printf("PinIn: %d\n",PinIn);
+    printf("PintOut: %d\n",PinOut);
+    printf("Clock: %d\n",Clock);
 
 
- 
+   
+
+//              ____               _   _                           
+//             / ___|   ___     __| | (_)   __ _    ___            
+//   _____    | |      / _ \   / _` | | |  / _` |  / _ \     _____ 
+//  |_____|   | |___  | (_) | | (_| | | | | (_| | | (_) |   |_____|
+//             \____|  \___/   \__,_| |_|  \__, |  \___/           
+//                                         |___/                     
+
+    //Codigo para el Emisor
+    if(emisor == true){ 
+
+
+    emisor = false;    
+    }
+    //Codigo para el Receptor
+
+
+
+
+
+
+
 
 
     // Return 0 to indicate successful program execution
