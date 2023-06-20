@@ -49,7 +49,7 @@ int main(int argc, char* argv[]) {
         printf("Error con el Nodo\n");
     }
 
-    printf("M.A.C: %s\n",varTxt[0] - 48);
+    printf("M.A.C: %s\n",varTxt[0]);
     printf("PinIn: %d\n",*varTxt[1] - 48);
     printf("PintOut: %d\n",*varTxt[2] - 48);
     printf("Clock: %d\n",*varTxt[3] - 48);
