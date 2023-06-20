@@ -67,7 +67,7 @@ int main(int argc, char* argv[]) {
 
     converterMAC(MAC, origen);
 
-    printf("Origen: %02X:%02X:%02X:%02X:%02X:%02X\n", origen[0], origen[1], origen[2], origen[3], origen[3], origen[4], origen[5]);
+    printf("Origen: %02X:%02X:%02X:%02X:%02X:%02X\n", origen[0], origen[1], origen[2], origen[3], origen[4], origen[5]);
 
 
    
