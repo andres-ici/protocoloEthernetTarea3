@@ -3,14 +3,14 @@
 #include <cstring>
 #include <cstdio>
 
-
-#define BYTE unasigned char
+#define BYTE unsigned char
 
 //Functions
 void leerArchivo(const char* rutaArchivo, char* variables[4]);
+void converterMAC(const char* MAC, BYTE* destino);
+void createEthernetFrame(BYTE* destino, BYTE* origen, BYTE* data, BYTE* frame);
 void leerBit(int pinIn,  BYTE *MAC);
 
-//Variables
 char* varTxt[4];
 bool emisor = false;
 
@@ -100,6 +100,12 @@ int main(int argc, char* argv[]) {
     printf("PintOut: %d\n",PinOut);
     printf("Clock: %d\n",Clock);
 
+    BYTE origen[6];
+
+    converterMAC(MAC, origen);
+
+    printf("Origen: %02X:%02X:%02X:%02X:%02X:%02X\n", origen[0], origen[1], origen[2], origen[3], origen[3], origen[4], origen[5]);
+
 
    
 
@@ -161,6 +167,22 @@ void leerArchivo(const char* rutaArchivo, char* variables[4]) {
 
 }
 
+void createEthernetFrame(BYTE* destino, BYTE* origen, BYTE* data, BYTE* frame){
+
+    for(int i = 0; i < 6; i++){
+
+        frame[i] = destino[i];
+        frame[i + 6] = origen[i];
+
+    }
+
+}
+
+void converterMAC(const char* MAC, BYTE* destino){
+
+    sscanf(MAC, "%hhX:%hhX:%hhX:%hhX:%hhX:%hhX", &destino[0], &destino[1], &destino[2], &destino[3], &destino[4], &destino[5]);
+
+}
 
 void leerBit(int pinIn, BYTE *MAC) {
   int largo; //Se inicializa el largo del mensaje 
