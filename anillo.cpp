@@ -5,11 +5,11 @@
 #define BYTE unasigned char
 
 //Functions
-void readFile(const char* filePath, char* variables[4]);
+void leerArchivo(const char* rutaArchivo, char* variables[4]);
 
 
 
-char* txt[4];
+char* varTxt[4];
 
 int main(int argc, char* argv[]) {
     // Print the number of command line arguments entered
@@ -34,25 +34,29 @@ int main(int argc, char* argv[]) {
     // Determine which node the program is running on
     if (strcmp(argv[1], "1") == 0) {
         printf("Nodo 1\n");
-        const char* filePath = "nodo_1.txt"; 
-        readFile(filePath,txt);
+        const char* rutaArchivo = "nodo_1.txt"; 
+        leerArchivo(rutaArchivo,varTxt);
     } else if (strcmp(argv[1], "2") == 0) {
         printf("Nodo 2\n");
-        const char* filePath = "nodo_2.txt"; 
-        readFile(filePath,txt);
+        const char* rutaArchivo = "nodo_2.txt"; 
+        leerArchivo(rutaArchivo,varTxt);
     } else if (strcmp(argv[1], "3") == 0) {
         printf("Nodo 3\n");
-        const char* filePath = "nodo_3.txt"; 
-        readFile(filePath,txt);
+        const char* rutaArchivo = "nodo_3.txt"; 
+        leerArchivo(rutaArchivo,varTxt);
     } else {
         // Print an error message if the node is not recognized
         printf("Error con el Nodo\n");
     }
 
-    printf("M.A.C: %s\n",txt[0]);
-    printf("PinIn: %s\n",txt[1]);
-    printf("PintOut: %s\n",txt[2]);
-    printf("Clock: %s\n",txt[3]);
+    printf("M.A.C: %s\n",varTxt[0]);
+    printf("PinIn: %s\n",varTxt[1]);
+    printf("PintOut: %s\n",varTxt[2]);
+    printf("Clock: %s\n",varTxt[3]);
+
+    printf("PinIn: %d\n",*varTxt[1] - 48);
+    printf("PintOut: %d\n",*varTxt[2] - 48);
+    printf("Clock: %d\n",*varTxt[3] - 48);
  
 
 
@@ -63,29 +67,29 @@ int main(int argc, char* argv[]) {
 
 //Fuctions
 
-void readFile(const char* filePath, char* variables[4]) {
-    int lineNumber = 1; // Start from line 1
-    FILE* inputFile = fopen(filePath, "r");
-    if (inputFile == nullptr) {
-        printf("Failed to open the file.\n");
+void leerArchivo(const char* rutaArchivo, char* variables[4]) {
+    int numeroLinea = 1; // Start from line 1
+    FILE* archivo = fopen(rutaArchivo, "r");
+    if (archivo == nullptr) {
+        printf("Error al abrir el archivo\n");
         return;
     }
 
-    char line[256];
+    char Linea[256];
     int x = 0;
-    while (fgets(line, sizeof(line), inputFile) != nullptr) {
+    while (fgets(Linea, sizeof(Linea), archivo) != nullptr) {
         // Check if the current line number matches the desired lines
-        printf("line(%d): %s",lineNumber, line);
-        if (lineNumber == 2 || lineNumber == 5 || lineNumber == 8 || lineNumber == 11) {
+        //printf("Linea(%d): %s",numeroLinea, Linea);
+        if (numeroLinea == 2 || numeroLinea == 5 || numeroLinea == 8 || numeroLinea == 11) {
             // Make a copy of the line and assign it to the corresponding variable
-            variables[x] = strdup(line);
-            //printf("line#: %d, valor: %d\n",lineNumber, x);
+            variables[x] = strdup(Linea);
+            //printf("line#: %d, valor: %d\n",numeroLinea, x);
             x++;
         }
-        lineNumber++;
+        numeroLinea++;
     }
 
-    fclose(inputFile);
+    fclose(archivo);
 
 }
 
