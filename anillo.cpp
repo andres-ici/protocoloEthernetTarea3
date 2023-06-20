@@ -10,6 +10,7 @@ void leerArchivo(const char* rutaArchivo, char* variables[4]);
 void converterMAC(const char* MAC, BYTE* destino);
 void createEthernetFrame(BYTE* destino, BYTE* origen, BYTE* data, BYTE* frame);
 void leerBit(int pinIn,  BYTE *MAC);
+bool compararMAC(BYTE MACdestino[6],const char *MAC);
 
 char* varTxt[4];
 bool emisor = false;
@@ -28,7 +29,7 @@ BYTE DB = 219; //Guarda el valor de decimal de DB en DB
 BYTE DC = 220; //Guarda el valor de decimal de DC en DC
 BYTE DD = 221; //Guarda el valor de decimal de DD en DD
 
-BYTE msg[62]; //Se guarda todo el mensaje recibido excepto los bytes de inicio y final 
+BYTE msg[300]; //Se guarda todo el mensaje recibido excepto los bytes de inicio y final 
 int index = 0; //Desface requerido para guardar el byte en caso de encontrar un DBDC y/o DBDD
 int B = 0; //Cantidad de bytes recibidos
 int FCS = 0; //Se guarda el valor del FCS calculada del receptor
@@ -184,10 +185,14 @@ void converterMAC(const char* MAC, BYTE* destino){
 
 }
 
+//void chqueoMac(BYTE *Receptor, ){
+//}
+
 void leerBit(int pinIn, BYTE *MAC) {
   int largo; //Se inicializa el largo del mensaje 
   int cmd; //Se inicializa el comando del mensaje
   int comienzoData = 1; //Se inicializa el comienzo de la data
+  int MACdestino = 0;
   bool bit = digitalRead(pinIn); //Se leen los bits del pin
   
   c = (c << 1) | bit; //Se guardan los bits en “c”
@@ -217,6 +222,7 @@ void leerBit(int pinIn, BYTE *MAC) {
             if(c == C0){ //Se activa con el segundo C0 es decir con el byte de final
 
             //Chequeo de Mac con el destino
+
 
 
             }else{
@@ -251,3 +257,27 @@ void leerBit(int pinIn, BYTE *MAC) {
 
 }
 
+bool compararMAC(BYTE MACdestino[6],const char *MAC){
+
+    BYTE MACconvertido[6];
+    converterMAC(MAC,MACconvertido);
+
+    printf("Mac Convertido\n");
+    for(int i = 0; i < 6 ; i++){
+        printf("%d",MACconvertido[i]);
+    }
+    printf("\n");
+
+    int contador = 0;
+
+    for(int i = 0; i < 6; i++){
+        if(MACconvertido[i] == MACdestino[i]){
+            contador++;
+        }
+    }
+    if(contador == 6){
+        return true;
+    }
+
+    return false;
+}
