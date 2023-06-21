@@ -30,7 +30,7 @@ BYTE DB = 219; //Guarda el valor de decimal de DB en DB
 BYTE DC = 220; //Guarda el valor de decimal de DC en DC
 BYTE DD = 221; //Guarda el valor de decimal de DD en DD
 
-BYTE msg[300]; //Se guarda todo el mensaje recibido excepto los bytes de inicio y final 
+BYTE* msg[300]; //Se guarda todo el mensaje recibido excepto los bytes de inicio y final 
 int index = 0; //Desface requerido para guardar el byte en caso de encontrar un DBDC y/o DBDD
 int B = 0; //Cantidad de bytes recibidos
 int FCS = 0; //Se guarda el valor del FCS calculada del receptor
@@ -128,9 +128,7 @@ int main(int argc, char* argv[]) {
 //             \____|  \___/   \__,_| |_|  \__, |  \___/           
 //                                         |___/                     
 
-
-    //Codigo para el Emisor
-    // Destribucion Capa Ethernet (REVISAR!!!!!!!!!!!!!!!!!!!!!!)
+    // Destribucion Capa Ethernet 
     // Destino: [0,5]
     // Origen: [6,11]
     // TTL: [12]
@@ -139,58 +137,58 @@ int main(int argc, char* argv[]) {
     // FCS: [(15 + Longitud) + 1, (15 + Longitud) + 4]
 
     if(emisor == true){ 
+    // Codigo para el Emisor 
+
+    emisor = false;    
+    }
+    //Codigo para el Receptor 
+
+    printf("Esperando...\n");
+
+            
+    //Arregar la parte sincronica del receptor !!!!!!!!!!!!!!!!!!!!!! 
+    void leerBit(PinIn, MAC, msg);
+
+    BYTE MACdestino[6] = {msg[0], msg[1], msg[2], msg[3], msg[4], msg[5]};
+    BYTE MACorigen[6] = {msg[6], msg[7], msg[8], msg[9], msg[10], msg[11]};
+    printf("Comparacion de mac:%d\n",compararMAC(MACdestino, MAC));
+
+    if(compararMAC(MACdestino, MAC)){ //Compara si la MAC del destino es igual a la MAC del receptor
+        
+        int largoCapaEthernet = msg[13] + (msg[14] << 8);
+        printf("Longitud: %d\n",largoCapaEthernet);
+
+        
+        int FCScapaEthernet = 0;
+        int x = 0;
+        for(int i = (16 + largoCapaEthernet); i <= (16 + largoCapaEthernet) + 4; i++){
+        
+            FCScapaEthernet =  FCScapaEthernet + (msg[i] << x*8);
+            x++;
+        }
+        
+        printf("FCS: %d\n",FCScapaEthernet);
+
+
+
         
 
-        //arregar la part del receptor, lo del clock y eso
-        void leerBit(PinIn, MAC, msg);
+    }else{
+        msg[12] = msg[12] - 1; //Resta al TTL
 
-        BYTE MACdestino[6] = {msg[0], msg[1], msg[2], msg[3], msg[4], msg[5]};
-        BYTE MACorigen[6] = {msg[6], msg[7], msg[8], msg[9], msg[10], msg[11]};
-        printf("Comparacion de mac:%d\n",compararMAC(MACdestino, MAC));
+        if(msg[12] == 0){ //No se renvia el mensaje 
+        printf("Mensaje descartado por TTL\n");
+        printf("TTL:%d\n",msg[12]);
 
-        if(compararMAC(MACdestino, MAC)){ //Compara si la MAC del destino es igual a la MAC del receptor
-           
-            int largoCapaEthernet = msg[13] + (msg[14] << 8);
-            printf("Longitud: %d\n",largoCapaEthernet);
-
-            
-            int FCScapaEthernet = 0;
-            int x = 0;
-            for(int i = (16 + largoCapaEthernet); i <= (16 + largoCapaEthernet) + 4; i++){
-            
-                FCScapaEthernet =  FCScapaEthernet + (msg[i] << x*8);
-                x++;
-            }
-            
-            printf("FCS: %d\n",FCScapaEthernet);
-
-
-
-            
-
-        }else{
-            msg[12] = msg[12] - 1; //Resta al TTL
-
-            if(msg[12] == 0){ //No se renvia el mensaje 
-            printf("Mensaje descartado por TTL\n");
-            printf("TTL:%d\n",msg[12]);
-
-            }else{ //Se renvia el mensaje
-            printf("Reenviando...\n");
-            printf("TTL:%d\n",msg[12]);
- 
-            }
-
-
+        }else{ //Se renvia el mensaje
+        printf("Reenviando...\n");
+        printf("TTL:%d\n",msg[12]);
 
         }
 
 
-    emisor = false;    
+
     }
-    //Codigo para el Receptor
-
-    printf("Esperando...\n");
 
 
 
@@ -198,9 +196,7 @@ int main(int argc, char* argv[]) {
 
 
 
-
-
-    // Return 0 to indicate successful program execution
+    
     return 0;
     
 }
@@ -283,7 +279,7 @@ void leerBit(int pinIn,  BYTE* MAC, BYTE* msg[300]){
 
             if(c == C0){ //Se activa con el segundo C0 es decir con el byte de final
 
-
+                return;
             }else{
                 printf("  %d  %c\n",c,c);
             }
