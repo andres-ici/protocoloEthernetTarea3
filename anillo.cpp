@@ -9,7 +9,7 @@
 void leerArchivo(const char* rutaArchivo, char* variables[4]);
 void converterMAC(const char* MAC, BYTE* destino);
 void createEthernetFrame(BYTE* destino, BYTE* origen, BYTE* data, BYTE* frame);
-void leerBit(int pinIn,  BYTE *MAC);
+void leerBit(int pinIn,  BYTE* MAC, BYTE* msg[300]);
 bool compararMAC(BYTE MACdestino[6],const char *MAC);
 
 char* varTxt[4];
@@ -95,7 +95,7 @@ int main(int argc, char* argv[]) {
         printf("Error con el Nodo\n");
     }
 
-    BYTE *MAC = varTxt[0]; //Tambien se puede aplicar el ARREGLO DEL ANDY !!!!!!!!!!!!!!!!!!!!!
+    BYTE *MAC = varTxt[0]; 
     int PinIn = *varTxt[1] - 48;
     int PinOut = *varTxt[2] - 48;
     int Clock = *varTxt[3] - 48;
@@ -139,6 +139,10 @@ int main(int argc, char* argv[]) {
     // FCS: [(15 + Longitud) + 1, (15 + Longitud) + 4]
 
     if(emisor == true){ 
+        
+
+        //arregar la part del receptor, lo del clock y eso
+        void leerBit(PinIn, MAC, msg);
 
         BYTE MACdestino[6] = {msg[0], msg[1], msg[2], msg[3], msg[4], msg[5]};
         BYTE MACorigen[6] = {msg[6], msg[7], msg[8], msg[9], msg[10], msg[11]};
@@ -159,6 +163,8 @@ int main(int argc, char* argv[]) {
             }
             
             printf("FCS: %d\n",FCScapaEthernet);
+
+
 
             
 
@@ -244,7 +250,7 @@ void converterMAC(const char* MAC, BYTE* destino){
 
 }
 
-void leerBit(int pinIn, BYTE *MAC) {
+void leerBit(int pinIn,  BYTE* MAC, BYTE* msg[300]){
   int largo; //Se inicializa el largo del mensaje 
   int cmd; //Se inicializa el comando del mensaje
   int comienzoData = 1; //Se inicializa el comienzo de la data
@@ -276,9 +282,6 @@ void leerBit(int pinIn, BYTE *MAC) {
             msg[B-index] = c; //Se guarda el byte de “c” en msg[] 
 
             if(c == C0){ //Se activa con el segundo C0 es decir con el byte de final
-
-            //Chequeo de Mac con el destino
-
 
 
             }else{
