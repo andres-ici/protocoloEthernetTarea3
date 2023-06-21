@@ -14,6 +14,7 @@ bool compararMAC(BYTE MACdestino[6],const char *MAC);
 
 char* varTxt[4];
 bool emisor = false;
+int nodo;
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -76,14 +77,17 @@ int main(int argc, char* argv[]) {
     // Determine which node the program is running on
     if (strcmp(argv[1], "1") == 0) {
         printf("Nodo 1\n");
+        nodo = 1;
         const char* rutaArchivo = "nodo_1.txt"; 
         leerArchivo(rutaArchivo,varTxt);
     } else if (strcmp(argv[1], "2") == 0) {
         printf("Nodo 2\n");
+        nodo = 2;
         const char* rutaArchivo = "nodo_2.txt"; 
         leerArchivo(rutaArchivo,varTxt);
     } else if (strcmp(argv[1], "3") == 0) {
         printf("Nodo 3\n");
+        nodo = 3;
         const char* rutaArchivo = "nodo_3.txt"; 
         leerArchivo(rutaArchivo,varTxt);
     } else {
@@ -101,6 +105,13 @@ int main(int argc, char* argv[]) {
     printf("PintOut: %d\n",PinOut);
     printf("Clock: %d\n",Clock);
 
+    if(emisor){
+        printf("Nodo: %d, modo Emisor, M.A.C: %s\n\n",nodo,*MAC);
+    }else{
+        printf("Nodo: %d, modo Receptor, M.A.C: %s\n\n",nodo,*MAC);
+    }
+
+
     BYTE origen[6];
 
     converterMAC(MAC, origen);
@@ -117,8 +128,56 @@ int main(int argc, char* argv[]) {
 //             \____|  \___/   \__,_| |_|  \__, |  \___/           
 //                                         |___/                     
 
+
     //Codigo para el Emisor
+    // Destribucion Capa Ethernet (REVISAR!!!!!!!!!!!!!!!!!!!!!!)
+    // Destino: [0,5]
+    // Origen: [6,11]
+    // TTL: [12]
+    // Longitud: [13,14]
+    // Data + Relleno: [15, 15 + Longitud]
+    // FCS: [(15 + Longitud) + 1, (15 + Longitud) + 4]
+
     if(emisor == true){ 
+
+        BYTE MACdestino[6] = {msg[0], msg[1], msg[2], msg[3], msg[4], msg[5]};
+        BYTE MACorigen[6] = {msg[6], msg[7], msg[8], msg[9], msg[10], msg[11]};
+        printf("Comparacion de mac:%d\n",compararMAC(MACdestino, MAC));
+
+        if(compararMAC(MACdestino, MAC)){ //Compara si la MAC del destino es igual a la MAC del receptor
+           
+            int largoCapaEthernet = msg[13] + (msg[14] << 8);
+            printf("Longitud: %d\n",largoCapaEthernet);
+
+            
+            int FCScapaEthernet = 0;
+            int x = 0;
+            for(int i = (16 + largoCapaEthernet); i <= (16 + largoCapaEthernet) + 4; i++){
+            
+                FCScapaEthernet =  FCScapaEthernet + (msg[i] << x*8);
+                x++;
+            }
+            
+            printf("FCS: %d\n",FCScapaEthernet);
+
+            
+
+        }else{
+            msg[12] = msg[12] - 1; //Resta al TTL
+
+            if(msg[12] == 0){ //No se renvia el mensaje 
+            printf("Mensaje descartado por TTL\n");
+            printf("TTL:%d\n",msg[12]);
+
+            }else{ //Se renvia el mensaje
+            printf("Reenviando...\n");
+            printf("TTL:%d\n",msg[12]);
+ 
+            }
+
+
+
+        }
 
 
     emisor = false;    
@@ -184,9 +243,6 @@ void converterMAC(const char* MAC, BYTE* destino){
     sscanf(MAC, "%hhX:%hhX:%hhX:%hhX:%hhX:%hhX", &destino[0], &destino[1], &destino[2], &destino[3], &destino[4], &destino[5]);
 
 }
-
-//void chqueoMac(BYTE *Receptor, ){
-//}
 
 void leerBit(int pinIn, BYTE *MAC) {
   int largo; //Se inicializa el largo del mensaje 
