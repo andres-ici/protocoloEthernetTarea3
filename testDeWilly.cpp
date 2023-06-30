@@ -117,76 +117,77 @@ int main(int argc, char* argv[]) {
     BYTE B0 = 176;
 
     //MAC
-    msg[7] = BE;
-    msg[8] = E9;
-    msg[9] = B0;
-    msg[10] = 9;
-    msg[11] = BE;
-    msg[12] = E9;
+    msg[0] = BE;
+    msg[1] = E9;
+    msg[2] = B0;
+    msg[3] = 9;
+    msg[4] = BE;
+    msg[5] = E9;
 
     //TTL
-    msg[13] = 1;
+    msg[12] = 1;
 
     //Longitud
-    msg[14] = 0; //LSB
-    msg[15] = 0; //MSB
+    msg[13] = 1; //LSB
+    msg[14] = 0; //MSB
+
+    
+
+
+    int desfase = 1;
 
     //FCS
-    msg[16] = 1;
-    msg[17] = 1;
-    msg[18] = 1;
-    msg[19] = 1;
+    msg[16+desfase] = 1;
+    msg[17+desfase] = 0;
+    msg[18+desfase] = 0;
+    msg[19+desfase] = 0;
 
-    // Destribucion Capa Ethernet (REVISAR!!!!!!!!!!!!!!!!!!!!!!)
-    // Destino: [1,6]
-    // Origen: [7,12]
-    // TTL: [13]
-    // Longitud: [14,15]
+    // Destribucion Capa Ethernet 
+    // Destino: [0,5]
+    // Origen: [6,11]
+    // TTL: [12]
+    // Longitud: [13,14]
     // Data + Relleno: [15, 15 + Longitud]
     // FCS: [(15 + Longitud) + 1, (15 + Longitud) + 4]
 
     if(emisor == true){ 
 
-        BYTE MACdestino[6] = {msg[7], msg[8], msg[9], msg[10], msg[11], msg[12]};
-        printf("Comparacion de mac:%d\n",compararMAC(MACdestino, MAC));
+       
+    emisor = false;    
+    }
+    BYTE MACdestino[6] = {msg[0], msg[1], msg[2], msg[3], msg[4], msg[5]};
+    printf("Comparacion de mac:%d\n",compararMAC(MACdestino, MAC));
 
-        if(compararMAC(MACdestino, MAC)){ //Compara si la MAC del destino es igual a la MAC del receptor
-           
-            int largoCapaEthernet = msg[14] + (msg[15] << 8);
-            printf("Longitud: %d\n",largoCapaEthernet);
+    if(compararMAC(MACdestino, MAC)){ //Compara si la MAC del destino es igual a la MAC del receptor
+        
+        int largoCapaEthernet = msg[13] + (msg[14] << 8);
+        printf("Longitud: %d\n",largoCapaEthernet);
 
-            
-            int FCScapaEthernet = 0;
-            int x = 0;
-            for(int i = (16 + largoCapaEthernet); i <= (16 + largoCapaEthernet) + 4; i++){
-            
-                FCScapaEthernet =  FCScapaEthernet + (msg[i] << x*8);
-                x++;
-            }
-            
-            printf("FCS: %d\n",FCScapaEthernet);
+        
+        int FCScapaEthernet = 0;
+        int x = 0;
+        for(int i = (16 + largoCapaEthernet); i <= (16 + largoCapaEthernet) + 4; i++){
+        
+            FCScapaEthernet =  FCScapaEthernet + (msg[i] << x*8);
+            x++;
+        }
+        
+        printf("FCS: %d\n",FCScapaEthernet);
 
-        }else{
-            msg[13] = msg[13] - 1; //Resta al TTL
+    }else{
+        msg[12] = msg[12] - 1; //Resta al TTL
 
-            if(msg[13] == 0){ //No se renvia el mensaje 
-            printf("Mensaje descartado por TTL\n");
-            printf("TTL:%d\n",msg[13]);
+        if(msg[12] == 0){ //No se renvia el mensaje 
+        printf("Mensaje descartado por TTL\n");
+        printf("TTL:%d\n",msg[12]);
 
-            }else{ //Se renvia el mensaje
-            printf("Reenviando...\n");
-            printf("TTL:%d\n",msg[13]);
- 
-            }
-
-
+        }else{ //Se renvia el mensaje
+        printf("Reenviando...\n");
+        printf("TTL:%d\n",msg[12]);
 
         }
 
-
-    emisor = false;    
     }
-
 
 
 
