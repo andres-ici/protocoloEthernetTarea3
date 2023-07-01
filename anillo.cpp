@@ -35,19 +35,6 @@ int index = 0; //Desface requerido para guardar el byte en caso de encontrar un 
 int B = 0; //Cantidad de bytes recibidos
 int FCScalculadoCapaEthernet = 0; //Se guarda el valor del FCS calculada del receptor
 int FCScalculadoCapaPropio = 0; //Se guarda el valor del FCS calculada del receptor
-int contadorFSC = 0; //Cuenta la cantidad de FCS
-int conteoDeDataEsperada = 0; //Cuenta si la data esperada es igual a la recibida
-int contadorComparacionDeDatos = 0; //Cuenta la cantidad de veces en que la data es igual a la esperada en múltiples mensajes  
-int contadorDeMsgRecibidos = 0; //Cuenta la cantidad de mensajes recibidos 
-int contadorDeData = 0; //Cuenta la cantidad de datos (versos) recibidos 
-
-float pMsgRecibidosCorrectamente;
-float pMsgRecibidosConError;
-float pMsgRecibidosSinErroresNoDetectados;
-float pMsgRecibidosConErroresNoDetectados;
-
-
-BYTE dataEsperada[] = "~ ~ Mama, just killed a man ~ ~"; //Es la data que espera el receptor del emisor
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -321,10 +308,7 @@ void leerBit(int pinIn,  BYTE* MAC, BYTE* msg[300]){
             B = 0;
             c = 0;
             d = 0;  
-            FCS = 0;
             index = 0;
-            FCSEmisor = 0;
-            conteoDeDataEsperada = 0;
             transmissionStarted = true;
         }
     }else{
