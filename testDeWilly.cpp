@@ -30,7 +30,8 @@ BYTE DD = 221; //Guarda el valor de decimal de DD en DD
 BYTE msg[300]; //Se guarda todo el mensaje recibido excepto los bytes de inicio y final 
 int index = 0; //Desface requerido para guardar el byte en caso de encontrar un DBDC y/o DBDD
 int B = 0; //Cantidad de bytes recibidos
-int FCS = 0; //Se guarda el valor del FCS calculada del receptor
+int FCScalculadoCapaEthernet = 0; //Se guarda el valor del FCS calculada del receptor
+int FCScalculadoCapaPropio = 0; //Se guarda el valor del FCS calculada del receptor
 int FCSEmisor = 0; //Se guarda el valor del FCS calculada del emisor
 int contadorFSC = 0; //Cuenta la cantidad de FCS
 int conteoDeDataEsperada = 0; //Cuenta si la data esperada es igual a la recibida
@@ -92,7 +93,7 @@ int main(int argc, char* argv[]) {
         printf("Error con el Nodo\n");
     }
 
-    char *MAC = varTxt[0]; //Tambien se puede aplicar el ARREGLO DEL ANDY !!!!!!!!!!!!!!!!!!!!!
+    char *MAC = varTxt[0]; 
     int PinIn = *varTxt[1] - 48;
     int PinOut = *varTxt[2] - 48;
     int Clock = *varTxt[3] - 48;
@@ -117,19 +118,35 @@ int main(int argc, char* argv[]) {
     BYTE B0 = 176;
 
     //MAC
-    msg[0] = BE;
-    msg[1] = E9;
-    msg[2] = B0;
-    msg[3] = 9;
-    msg[4] = BE;
-    msg[5] = E9;
+    msg[0] = BE;     //1011 1110 hay 6 unos
+    msg[1] = E9;     //1110 1001 hay 5 unos
+    msg[2] = B0;     //1011 0000 hay 3 unos
+    msg[3] = 9;      //0000 1001 hay 2 unos
+    msg[4] = BE;     //1011 1110 hay 6 unos
+    msg[5] = E9;     //1110 1001 hay 5 unos
+                     //Total de unos 27           
+
+
+
+    //MAC Origen
+    msg[6] = BE;
+    msg[7] = E9;
+    msg[8] = B0;
+    msg[9] = 9;
+    msg[10] = BE;
+    msg[11] = E9;
+                     //Total de unos 27
 
     //TTL
-    msg[12] = 1;
-
+    msg[12] = 1;         //0000 0001 hay 1 uno
+ 
     //Longitud
-    msg[13] = 10; //LSB
-    msg[14] = 0; //MSB
+    msg[13] = 10;   //LSB  0000 1010 hay 2 unos
+    msg[14] = 0;    //MSB  0000 0000 hay 0 unos
+                         //Total de unos 3
+
+
+
 
     //Dato              MSB          LSB
     // msg[15]       = |L|L|L|L|L|C|C|C|
@@ -137,25 +154,32 @@ int main(int argc, char* argv[]) {
     // msg[47]       = |F|F|F|F|F|F|F|F|
     // msg[48]       = |_|_|_|_|_|_|_|F|
 
-    msg[15] = 56;      //= |L|L|L|L|L|C|C|C| 0011 1000 hay 3 unos
-    msg[16] = 'H';     //= |D|D|D|D|D|D|D|D| 0100 1000 hay 2 unos
-    msg[17] = 'o';     //                    0110 1111 hay 6 unos
-    msg[18] = 'l';     //                    0110 1100 hay 4 unos
-    msg[19] = 'a';     //                    0110 0001 hay 3 unos
-    msg[20] = ' ';     //                    0010 0000 hay 1 uno
-    msg[21] = 'x';     //                    0001 0100 hay 2 unos 
-    msg[22] = 'D';     //                    0100 0100 hay 2 unos
-    msg[23] = 23;      //= |F|F|F|F|F|F|F|F| Total de unos 23
-    msg[24] = 0;       //= |_|_|_|_|_|_|_|F|
+    msg[15] = 56;      //= |L|L|L|L|L|C|C|C| 0011 1000 hay 3 unos ok
+    msg[16] = 'H';     //= |D|D|D|D|D|D|D|D| 0100 1000 hay 2 unos ok
+    msg[17] = 'o';     //                    0110 1111 hay 6 unos ok
+    msg[18] = 'l';     //                    0110 1100 hay 4 unos ok
+    msg[19] = 'a';     //                    0110 0001 hay 3 unos ok
+    msg[20] = ' ';     //                    0010 0000 hay 1 uno  ok
+    msg[21] = 'x';     //                    0111 1000 hay 4 unos ok
+    msg[22] = 'D';     //                    0100 0100 hay 2 unos ok
+    msg[23] = 25;      //= |F|F|F|F|F|F|F|F| Total de unos 25                  0001 1001 hay 3 unos ok
+    msg[24] = 0;       //= |_|_|_|_|_|_|_|F|                                   Total de unos 28
 
-
+                                    // [15]: 0001 1100 ok
+                                    // [16]: 0001 0010 ok
+                                    // [17]: 1111 0110 ok
+                                    // [18]: 0011 0110 ok
+                                    // [19]: 1000 0110 ok
+                                    // [20]: 0000 0100 ok
+                                    // [21]: 0001 1110 ok
+                                    // [22]: 0010 0010 ok
     
-
+                                                         //Total de unos 27 + 27 + 3 + 28 = 85 
 
     int desfase = 10;
 
     //FCS
-    msg[16+desfase] = 1;
+    msg[16+desfase] = 85;
     msg[17+desfase] = 0;
     msg[18+desfase] = 0;
     msg[19+desfase] = 0;
@@ -179,7 +203,8 @@ int main(int argc, char* argv[]) {
     if(compararMAC(MACdestino, MAC)){ //Compara si la MAC del destino es igual a la MAC del receptor
         
         int largoCapaEthernet = msg[13] + (msg[14] << 8);
-        printf("Longitud: %d\n",largoCapaEthernet);
+        printf("largoCapaEthernet: %d\n",largoCapaEthernet);
+
 
         
         int FCScapaEthernet = 0;
@@ -191,9 +216,77 @@ int main(int argc, char* argv[]) {
         }
         
         printf("FCScapaEthernet: %d\n",FCScapaEthernet);
+
+        printf("Sumando:\n");
+        for(int i = 0; i <= (15 + largoCapaEthernet); i++){ //Calcula el FCS 
+            printf("[%d]: ",i);
+            for(int x = 0; x < 8; x++){
+                FCScalculadoCapaEthernet = FCScalculadoCapaEthernet + (int)((msg[i] >> x) & 0x01);
+                printf("%d",(int)((msg[i] >> x) & 0x01));
+            }
+            printf("\n hasta aca hay %d unos\n",FCScalculadoCapaEthernet);
+        }
+        printf("FCScalculadoCapaEthernet: %d\n",FCScalculadoCapaEthernet);
+
+        printf("FCS Nivel Ethernet:\n");
+        if(FCScapaEthernet == FCScalculadoCapaEthernet){ 
+            printf("FSC emisor (%d) SI coincide FSC receptor (%d)\n",FCScapaEthernet,FCScalculadoCapaEthernet);
+        }else{
+            printf("FSC emisor (%d) NO coincide FSC receptor (%d)\n",FCScapaEthernet,FCScalculadoCapaEthernet);
+        }
        
+        // Data + Relleno: [15, 15 + Longitud]
+
+        // msg[15]       = |L|L|L|L|L|C|C|C|
+        // msg[16 al 46] = |D|D|D|D|D|D|D|D|
+        // msg[47]       = |F|F|F|F|F|F|F|F|
+        // msg[48]       = |_|_|_|_|_|_|_|F|
 
 
+        // Destribucion Capa Propia
+        //CMD: (msg[15] & 0x07) 
+        //Longitud: (msg[15] & 0xF8) >> 3
+        //Dato: msg[15] ... msg[15 + longitud]
+        //FCS: msg[16 + longitud] | (msg[17 + longitud] & 0x01) << 8 
+
+
+        int cmdCapaPropio = msg[15] & 0x07;
+        int largoCapaPropio = (msg[15] & 0xF8) >> 3;
+
+        int FCScapaPropio = msg[16 + largoCapaPropio] | (msg[17 + largoCapaPropio] & 0x01) << 8;
+
+        printf("\n\nDATA\n");
+        printf("cmdCapaPropia: %d\n",cmdCapaPropio);
+        printf("largoCapaPropia: %d\n",largoCapaPropio);
+        printf("FCScapaPropio: %d\n",FCScapaPropio);
+
+        printf("Sumando:\n");
+        for(int i = 15; i <= (15 + largoCapaPropio); i++){ //Calcula el FCS 
+            printf("[%d]: ",i);
+            for(int x = 0; x < 8; x++){
+                FCScalculadoCapaPropio = FCScalculadoCapaPropio + (int)((msg[i] >> x) & 0x01);
+                printf("%d",(int)((msg[i] >> x) & 0x01));
+            }
+            printf("\n");
+        }
+       
+        printf("FCScalculadoCapaPropio: %d\n",FCScalculadoCapaPropio);
+
+
+        printf("FCS Nivel Propio:\n");
+        if(FCScapaPropio == FCScalculadoCapaPropio){ 
+            printf("FSC emisor (%d) SI coincide FSC receptor (%d)\n",FCScapaPropio,FCScalculadoCapaPropio);
+        }else{
+            printf("FSC emisor (%d) NO coincide FSC receptor (%d)\n",FCScapaPropio,FCScalculadoCapaPropio);
+        }
+
+        printf("\n\nMSG\n");
+        for(int i = 16; i < (16 + largoCapaPropio);i++){
+            printf("%c",msg[i]);
+        }
+        printf("\n\n\n\n");
+
+    
 
 
 
@@ -212,38 +305,7 @@ int main(int argc, char* argv[]) {
 
     }
 
-    // Data + Relleno: [15, 15 + Longitud]
 
-    // msg[15]       = |L|L|L|L|L|C|C|C|
-    // msg[16 al 46] = |D|D|D|D|D|D|D|D|
-    // msg[47]       = |F|F|F|F|F|F|F|F|
-    // msg[48]       = |_|_|_|_|_|_|_|F|
-
-
-    // Destribucion Capa Propia
-    //CMD: (msg[15] & 0x07) 
-    //Longitud: (msg[15] & 0xF8) >> 3
-    //Dato: msg[15] ... msg[15 + longitud]
-    //FCS: msg[16 + longitud] | (msg[17 + longitud] & 0x01) << 8 
-
-
-    int cmdCapaPropio = msg[15] & 0x07;
-    int largoCapaPropio = (msg[15] & 0xF8) >> 3;
-    
-    int FCScapaPropio = msg[16 + largoCapaPropio] | (msg[17 + largoCapaPropio] & 0x01) << 8;
-
-    printf("\n\nDATA\n");
-    printf("cmdCapaPropia: %d\n",cmdCapaPropio);
-    printf("largoCapaPropia: %d\n",largoCapaPropio);
-    printf("FCScapaPropio: %d\n",FCScapaPropio);
-    
-    printf("\n\nMSG\n");
-    for(int i = 16; i < (16 + largoCapaPropio);i++){
-        printf("%c",msg[i]);
-    }
-    printf("\n");
-
-    
     // Return 0 to indicate successful program execution
     return 0;
     
