@@ -148,7 +148,7 @@ int main(int argc, char* argv[]) {
     // Origen: [6,11]
     // TTL: [12]
     // Longitud: [13,14]
-    // Data + Relleno: [15, 15 + Longitud]
+
     // FCS: [(15 + Longitud) + 1, (15 + Longitud) + 4]
 
     if(emisor == true){ 
@@ -175,17 +175,6 @@ int main(int argc, char* argv[]) {
         
         printf("FCS: %d\n",FCScapaEthernet);
        
-        BYTE* msg2 = new BYTE[largoCapaEthernet];
-        printf("%d\n",sizeof(msg2));
-
-        printf("msg\n");
-        for(int i = 15; i <= (largoCapaEthernet+1); i++){
-            msg2[i-15] = msg[i]; 
-            printf("msg2[%d]: %d = msg[%d]: %d\n", i-15, msg2[i-15], i-15, msg[i]);
-        }
-
-
-
 
 
 
@@ -206,6 +195,19 @@ int main(int argc, char* argv[]) {
 
     }
 
+    // Data + Relleno: [15, 15 + Longitud]
+
+    // msg[15]       = |C|C|C|L|L|L|L|L|
+    // msg[16]       = |L|L|L|D|D|D|D|D|
+    // msg[17 al 65] = |D|D|D|D|D|D|D|D|
+    // msg[66]       = |D|D|D|F|F|F|F|F|
+    // msg[67]       = |F|F|F|F|_|_|_|_|
+
+    // Destribucion Capa Propia
+    //CMD: (msg[15] & 0xE0) >> 5  
+    //Longitud: (msg[15] & 0x1F) | ((msg[16] & 0xE0) >> 5)
+    //Dato: (msg[16] & 0x1F) |...| ((msg[17 + (Longitud - 1)] & 0xE0) >> 5)
+    //FCS: ((msg[17 + (Longitud - 1)] & 0x1F)) | ((msg[17 + (Longitud)] & 0xF0) >> 4)
 
 
 
