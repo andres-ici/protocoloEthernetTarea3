@@ -197,17 +197,16 @@ int main(int argc, char* argv[]) {
 
     // Data + Relleno: [15, 15 + Longitud]
 
-    // msg[15]       = |C|C|C|L|L|L|L|L|
-    // msg[16]       = |L|L|L|D|D|D|D|D|
-    // msg[17 al 65] = |D|D|D|D|D|D|D|D|
-    // msg[66]       = |D|D|D|F|F|F|F|F|
-    // msg[67]       = |F|F|F|F|_|_|_|_|
+    // msg[15]       = |L|L|L|L|L|C|C|C|
+    // msg[16 al 46] = |D|D|D|D|D|D|D|D|
+    // msg[47]       = |F|F|F|F|F|F|F|F|
+    // msg[48]       = |_|_|_|_|_|_|_|F|
 
     // Destribucion Capa Propia
-    //CMD: (msg[15] & 0xE0) >> 5  
-    //Longitud: (msg[15] & 0x1F) | ((msg[16] & 0xE0) >> 5)
-    //Dato: (msg[16] & 0x1F) |...| ((msg[17 + (Longitud - 1)] & 0xE0) >> 5)
-    //FCS: ((msg[17 + (Longitud - 1)] & 0x1F)) | ((msg[17 + (Longitud)] & 0xF0) >> 4)
+    //CMD: (msg[15] & 0x07)
+    //Longitud: (msg[15] & 0xF8)
+    //Dato: msg[15] ... msg[15 + longitud]
+    //FCS: msg[16 + longitud] | (msg[17 + longitud] & 0x01) << 8 
 
 
 
