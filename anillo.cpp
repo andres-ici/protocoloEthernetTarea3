@@ -33,21 +33,8 @@ BYTE DD = 221; //Guarda el valor de decimal de DD en DD
 BYTE* msg[300]; //Se guarda todo el mensaje recibido excepto los bytes de inicio y final 
 int index = 0; //Desface requerido para guardar el byte en caso de encontrar un DBDC y/o DBDD
 int B = 0; //Cantidad de bytes recibidos
-int FCS = 0; //Se guarda el valor del FCS calculada del receptor
-int FCSEmisor = 0; //Se guarda el valor del FCS calculada del emisor
-int contadorFSC = 0; //Cuenta la cantidad de FCS
-int conteoDeDataEsperada = 0; //Cuenta si la data esperada es igual a la recibida
-int contadorComparacionDeDatos = 0; //Cuenta la cantidad de veces en que la data es igual a la esperada en múltiples mensajes  
-int contadorDeMsgRecibidos = 0; //Cuenta la cantidad de mensajes recibidos 
-int contadorDeData = 0; //Cuenta la cantidad de datos (versos) recibidos 
-
-float pMsgRecibidosCorrectamente;
-float pMsgRecibidosConError;
-float pMsgRecibidosSinErroresNoDetectados;
-float pMsgRecibidosConErroresNoDetectados;
-
-
-BYTE dataEsperada[] = "~ ~ Mama, just killed a man ~ ~"; //Es la data que espera el receptor del emisor
+int FCScalculadoCapaEthernet = 0; //Se guarda el valor del FCS calculada del receptor
+int FCScalculadoCapaPropio = 0; //Se guarda el valor del FCS calculada del receptor
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -112,11 +99,9 @@ int main(int argc, char* argv[]) {
     }
 
 
-    BYTE origen[6];
-
-    converterMAC(MAC, origen);
-
-    printf("Origen: %02X:%02X:%02X:%02X:%02X:%02X\n", origen[0], origen[1], origen[2], origen[3], origen[4], origen[5]);
+    // BYTE origen[6];
+    // converterMAC(MAC, origen);
+    // printf("Origen: %02X:%02X:%02X:%02X:%02X:%02X\n", origen[0], origen[1], origen[2], origen[3], origen[4], origen[5]);
 
 
    
@@ -161,14 +146,10 @@ int main(int argc, char* argv[]) {
 
     BYTE MACdestino[6] = {msg[0], msg[1], msg[2], msg[3], msg[4], msg[5]};
     BYTE MACorigen[6] = {msg[6], msg[7], msg[8], msg[9], msg[10], msg[11]};
-    printf("Comparacion de mac:%d\n",compararMAC(MACdestino, MAC));
 
     if(compararMAC(MACdestino, MAC)){ //Compara si la MAC del destino es igual a la MAC del receptor
         
         int largoCapaEthernet = msg[13] + (msg[14] << 8);
-        printf("Longitud: %d\n",largoCapaEthernet);
-
-        
         int FCScapaEthernet = 0;
         int x = 0;
         for(int i = (16 + largoCapaEthernet); i <= (16 + largoCapaEthernet) + 4; i++){
@@ -177,11 +158,73 @@ int main(int argc, char* argv[]) {
             x++;
         }
         
-        printf("FCS: %d\n",FCScapaEthernet);
+        for(int i = 0; i <= (15 + largoCapaEthernet); i++){ //Calcula el FCS 
+            for(int x = 0; x < 8; x++){
+                FCScalculadoCapaEthernet = FCScalculadoCapaEthernet + (int)((msg[i] >> x) & 0x01);
+            }
+        }
 
-        
 
-        
+       
+        // Data + Relleno: [15, 15 + Longitud]
+
+        // msg[15]       = |L|L|L|L|L|C|C|C|
+        // msg[16 al 46] = |D|D|D|D|D|D|D|D|
+        // msg[47]       = |F|F|F|F|F|F|F|F|
+        // msg[48]       = |_|_|_|_|_|_|_|F|
+
+
+        // Destribucion Capa Propia
+        //CMD: (msg[15] & 0x07) 
+        //Longitud: (msg[15] & 0xF8) >> 3
+        //Dato: msg[15] ... msg[15 + longitud]
+        //FCS: msg[16 + longitud] | (msg[17 + longitud] & 0x01) << 8 
+
+
+        int cmdCapaPropio = msg[15] & 0x07;
+        int largoCapaPropio = (msg[15] & 0xF8) >> 3;
+        int FCScapaPropio = msg[16 + largoCapaPropio] | (msg[17 + largoCapaPropio] & 0x01) << 8;
+
+
+        for(int i = 15; i <= (15 + largoCapaPropio); i++){ //Calcula el FCS 
+            for(int x = 0; x < 8; x++){
+                FCScalculadoCapaPropio = FCScalculadoCapaPropio + (int)((msg[i] >> x) & 0x01);
+            }
+        }
+       
+
+
+
+        printf("\n\nCapa_Ethernet\n");
+        printf("M.A.C Destino:");
+        for(int i = 0 ; i <= 5; i++){
+            printf("%c",msg[i]);
+        }
+        printf("\n");
+        printf("M.A.C Origen:");
+        for(int i = 6 ; i <= 11; i++){
+            printf("%c",msg[i]);
+        }
+        printf("\n");
+        printf("TTL:%d\n",msg[12]);
+        printf("largoCapaEthernet: %d\n",largoCapaEthernet);
+        printf("FCScapaEthernet: %d\n",FCScapaEthernet);
+        printf("FCScalculadoCapaEthernet: %d\n",FCScalculadoCapaEthernet);
+
+
+        printf("\n\nCapa_Propia\n");
+        printf("cmdCapaPropia: %d\n",cmdCapaPropio);
+        printf("largoCapaPropia: %d\n",largoCapaPropio);
+        printf("FCScapaPropio: %d\n",FCScapaPropio);
+        printf("FCScalculadoCapaPropio: %d\n",FCScalculadoCapaPropio);
+
+        printf("\n\nMensaje_Recibido\n");
+        for(int i = 16; i < (16 + largoCapaPropio);i++){
+            printf("%c",msg[i]);
+        }
+        printf("\n\n\n\n");
+
+
 
     }else{
         msg[12] = msg[12] - 1; //Resta al TTL
@@ -195,7 +238,6 @@ int main(int argc, char* argv[]) {
         printf("TTL:%d\n",msg[12]);
 
         }
-
 
 
     }
@@ -266,10 +308,7 @@ void leerBit(int pinIn,  BYTE* MAC, BYTE* msg[300]){
             B = 0;
             c = 0;
             d = 0;  
-            FCS = 0;
             index = 0;
-            FCSEmisor = 0;
-            conteoDeDataEsperada = 0;
             transmissionStarted = true;
         }
     }else{
