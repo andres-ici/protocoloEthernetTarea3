@@ -128,14 +128,31 @@ int main(int argc, char* argv[]) {
     msg[12] = 1;
 
     //Longitud
-    msg[13] = 2; //LSB
+    msg[13] = 10; //LSB
     msg[14] = 0; //MSB
 
-    //Dato
-    msg[15] = 1;
-    msg[15] = 1;
+    //Dato              MSB          LSB
+    // msg[15]       = |L|L|L|L|L|C|C|C|
+    // msg[16 al 46] = |D|D|D|D|D|D|D|D|
+    // msg[47]       = |F|F|F|F|F|F|F|F|
+    // msg[48]       = |_|_|_|_|_|_|_|F|
 
-    int desfase = 2;
+    msg[15] = 56;      //= |L|L|L|L|L|C|C|C| 0011 1000 hay 3 unos
+    msg[16] = 'H';     //= |D|D|D|D|D|D|D|D| 0100 1000 hay 2 unos
+    msg[17] = 'o';     //                    0110 1111 hay 6 unos
+    msg[18] = 'l';     //                    0110 1100 hay 4 unos
+    msg[19] = 'a';     //                    0110 0001 hay 3 unos
+    msg[20] = ' ';     //                    0010 0000 hay 1 uno
+    msg[21] = 'x';     //                    0001 0100 hay 2 unos 
+    msg[22] = 'D';     //                    0100 0100 hay 2 unos
+    msg[23] = 23;      //= |F|F|F|F|F|F|F|F| Total de unos 23
+    msg[24] = 0;       //= |_|_|_|_|_|_|_|F|
+
+
+    
+
+
+    int desfase = 10;
 
     //FCS
     msg[16+desfase] = 1;
@@ -173,7 +190,7 @@ int main(int argc, char* argv[]) {
             x++;
         }
         
-        printf("FCS: %d\n",FCScapaEthernet);
+        printf("FCScapaEthernet: %d\n",FCScapaEthernet);
        
 
 
@@ -202,17 +219,31 @@ int main(int argc, char* argv[]) {
     // msg[47]       = |F|F|F|F|F|F|F|F|
     // msg[48]       = |_|_|_|_|_|_|_|F|
 
+
     // Destribucion Capa Propia
-    //CMD: (msg[15] & 0x07)
-    //Longitud: (msg[15] & 0xF8)
+    //CMD: (msg[15] & 0x07) 
+    //Longitud: (msg[15] & 0xF8) >> 3
     //Dato: msg[15] ... msg[15 + longitud]
     //FCS: msg[16 + longitud] | (msg[17 + longitud] & 0x01) << 8 
 
 
+    int cmdCapaPropio = msg[15] & 0x07;
+    int largoCapaPropio = (msg[15] & 0xF8) >> 3;
+    
+    int FCScapaPropio = msg[16 + largoCapaPropio] | (msg[17 + largoCapaPropio] & 0x01) << 8;
 
+    printf("\n\nDATA\n");
+    printf("cmdCapaPropia: %d\n",cmdCapaPropio);
+    printf("largoCapaPropia: %d\n",largoCapaPropio);
+    printf("FCScapaPropio: %d\n",FCScapaPropio);
+    
+    printf("\n\nMSG\n");
+    for(int i = 16; i < (16 + largoCapaPropio);i++){
+        printf("%c",msg[i]);
+    }
+    printf("\n");
 
-
-
+    
     // Return 0 to indicate successful program execution
     return 0;
     
