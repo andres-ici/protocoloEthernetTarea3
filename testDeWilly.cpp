@@ -128,13 +128,14 @@ int main(int argc, char* argv[]) {
     msg[12] = 1;
 
     //Longitud
-    msg[13] = 1; //LSB
+    msg[13] = 2; //LSB
     msg[14] = 0; //MSB
 
-    
+    //Dato
+    msg[15] = 1;
+    msg[15] = 1;
 
-
-    int desfase = 1;
+    int desfase = 2;
 
     //FCS
     msg[16+desfase] = 1;
@@ -173,6 +174,22 @@ int main(int argc, char* argv[]) {
         }
         
         printf("FCS: %d\n",FCScapaEthernet);
+       
+        BYTE* msg2 = new BYTE[largoCapaEthernet];
+        printf("%d\n",sizeof(msg2));
+
+        printf("msg\n");
+        for(int i = 15; i <= (largoCapaEthernet+1); i++){
+            msg2[i-15] = msg[i]; 
+            printf("msg2[%d]: %d = msg[%d]: %d\n", i-15, msg2[i-15], i-15, msg[i]);
+        }
+
+
+
+
+
+
+
 
     }else{
         msg[12] = msg[12] - 1; //Resta al TTL
