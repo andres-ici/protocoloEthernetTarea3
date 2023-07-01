@@ -1,7 +1,8 @@
-//#include <wiringPi.h>
+#include <wiringPi.h>
 #include <stdio.h>
 #include <cstring>
 #include <cstdio>
+#include <math.h>
 
 #define BYTE unsigned char
 
@@ -21,6 +22,10 @@ char* varTxt[4];
 bool emisor = false;
 int nodo;
 
+volatile int nbits = 0; //Cuenta la cantidad de bits recibidos
+volatile int nbytes = 0; //Cuenta el número de Byte enviados
+bool transmissionStarted = false; //Condicional para el comienzo de la transmisión
+BYTE slipProtocol[100];
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -110,6 +115,23 @@ int main(int argc, char* argv[]){
     printf("PintOut: %d\n",PinOut);
     printf("Clock: %d\n",Clock);
 
+    if(wiringPiSetup() == -1){ //Verificar correcto funcionamiento de Raspberry Pi
+
+        printf("Error");
+
+    }
+
+    //CONFIGURA INTERRUPCION PIN CLOCK (PUENTEADO A PIN PWM)
+    if(wiringPiISR(Clock, INT_EDGE_FALLING, &sendFrame) < 0){
+
+        printf("Unable to start interrupt function\n");
+
+    }
+
+    pinMode(pinOut, OUTPUT); //Se define el pin como salida
+
+    digitalWrite(pinOut, 0);
+
     if(emisor){
         printf("Nodo: %d, modo Emisor, M.A.C: %s",nodo, MAC);
     }else{
@@ -185,9 +207,9 @@ int main(int argc, char* argv[]){
         printf("Mensaje: %s", mensaje);
         printf("Largo mensaje: %i\n", largoMensaje);
         int largoOurProtocol = largoMensaje + 3;
-        BYTE frameOutProtocol[largoOurProtocol];
+        BYTE frameOurProtocol[largoOurProtocol];
 
-        createOurProtocolFrame(0, largoMensaje, mensaje, frameOutProtocol);
+        createOurProtocolFrame(0, largoMensaje, mensaje, frameOurProtocol);
 
         int largoEthernetProtocol = largoOurProtocol + 19;
 
@@ -200,11 +222,9 @@ int main(int argc, char* argv[]){
         
         BYTE ethernetProtocol[largoEthernetProtocol];
 
-        createEthernetFrame(destino, origen, largoOurProtocol, frameOutProtocol, ethernetProtocol);
+        createEthernetFrame(destino, origen, largoOurProtocol, frameOurProtocol, ethernetProtocol);
 
         int largoSlipProtocol = contLengthSLIP(ethernetProtocol, largoEthernetProtocol);
-
-        BYTE slipProtocol[largoSlipProtocol];
 
         printf("largoOurProtocol: %i\n", largoOurProtocol);
         printf("largoEthernetProtocol: %i\n", largoEthernetProtocol);
@@ -214,7 +234,7 @@ int main(int argc, char* argv[]){
 
         // for(int i = 0; i < largoOurProtocol; i++){
 
-        //     printf("frameOutProtocol = %i\n", frameOutProtocol[i]);
+        //     printf("frameOurProtocol = %i\n", frameOurProtocol[i]);
 
         // }
         
@@ -227,6 +247,15 @@ int main(int argc, char* argv[]){
         for(int i = 0; i < largoSlipProtocol; i++){
 
             printf("slipProtocol = %i\n", slipProtocol[i]);
+
+        }
+
+        startTransmission();//Se comienza la transmisión]
+
+        while(transmissionStarted){//Delay entre transmisiones 
+            
+            printf("Comenzo la transmision\n");
+            delay(2000);
 
         }
     
@@ -594,5 +623,38 @@ void generateFrameSLIP(BYTE* frame, BYTE* frameSLIP, int lenghtFrame){//Genera e
     }
 
     frameSLIP[cont] = 192; //Agrega BYTE de final
+
+}
+
+void sendFrame(void){   //Función de envío de información
+
+    if(transmissionStarted){
+  
+        digitalWrite(pinOut, (slipProtocol[nbytes] >> (7 - nbits)) & 0x01);
+        printf("%i", slipProtocol[nbytes] >> (7 - nbits) & 0x01);
+       
+        nbits++; //Actualiza contador de bits
+        
+        if(nbits == 8){//Actualiza el número de Frame
+            
+            nbits = 0;
+            printf("  %d  %c\n", slipProtocol[nbytes], slipProtocol[nbytes]);
+            nbytes++;
+
+            //Finaliza la comunicación
+            if(nbytes == largoSlipProtocol){
+                transmissionStarted = false;
+                nbytes = 0;
+            }
+
+        }
+
+    }
+
+}
+
+void startTransmission(){   //Cambia el condicional que controla la transmisión de información
+
+    transmissionStarted = true;
 
 }
