@@ -56,7 +56,7 @@ BYTE DC = 220; //Guarda el valor de decimal de DC en DC
 BYTE DD = 221; //Guarda el valor de decimal de DD en DD
 
 BYTE msg[300]; //Se guarda todo el mensaje recibido excepto los bytes de inicio y final 
-//int index = 0; //Desface requerido para guardar el byte en caso de encontrar un DBDC y/o DBDD
+int indexR = 0; //Desface requerido para guardar el byte en caso de encontrar un DBDC y/o DBDD
 int B = 0; //Cantidad de bytes recibidos
 int FCScalculadoCapaEthernet = 0; //Se guarda el valor del FCS calculada del receptor
 int FCScalculadoCapaPropio = 0; //Se guarda el valor del FCS calculada del receptor
@@ -279,28 +279,23 @@ int main(int argc, char* argv[]){
 
     BYTE MACdestino[6] = {msg[0], msg[1], msg[2], msg[3], msg[4], msg[5]};
     BYTE MACorigen[6] = {msg[6], msg[7], msg[8], msg[9], msg[10], msg[11]};
-
-    printf("MACdestino: %02X:%02X:%02X:%02X:%02X:%02X\n", msg[0], msg[1], msg[2], msg[3], msg[4], msg[5]);
-    printf("MACorigen: %02X:%02X:%02X:%02X:%02X:%02X\n", msg[6], msg[7], msg[8], msg[9], msg[10], msg[11]);
+    int largoCapaEthernet = msg[13] + (msg[14] << 8);
 
     if(compararMAC(MACdestino, MAC)){ //Compara si la MAC del destino es igual a la MAC del receptor
-        
-        int largoCapaEthernet = msg[13] + (msg[14] << 8);
-        int FCScapaEthernet = 0;
+       
+        long FCScapaEthernet = 0;
         int x = 0;
-        for(int i = (16 + largoCapaEthernet); i <= (16 + largoCapaEthernet) + 4; i++){
+        for(int i = (15 + largoCapaEthernet); i < (15 + largoCapaEthernet) + 4; i++){
         
-            FCScapaEthernet =  FCScapaEthernet + (msg[i] << x*8);
+            FCScapaEthernet =  FCScapaEthernet + (int)(msg[i] << x*8);
             x++;
         }
         
-        for(int i = 0; i <= (15 + largoCapaEthernet); i++){ //Calcula el FCS 
+        for(int i = 0; i < (15 + largoCapaEthernet); i++){ //Calcula el FCS 
             for(int x = 0; x < 8; x++){
                 FCScalculadoCapaEthernet = FCScalculadoCapaEthernet + (int)((msg[i] >> x) & 0x01);
             }
         }
-
-
        
         // Data + Relleno: [15, 15 + Longitud]
 
@@ -333,14 +328,10 @@ int main(int argc, char* argv[]){
 
         printf("\n\nCapa_Ethernet\n");
         printf("M.A.C Destino:");
-        for(int i = 0 ; i <= 5; i++){
-            printf("%c",msg[i]);
-        }
+        printf("%02X:%02X:%02X:%02X:%02X:%02X\n", msg[0], msg[1], msg[2], msg[3], msg[4], msg[5]);
         printf("\n");
         printf("M.A.C Origen:");
-        for(int i = 6 ; i <= 11; i++){
-            printf("%c",msg[i]);
-        }
+        printf("%02X:%02X:%02X:%02X:%02X:%02X\n", msg[6], msg[7], msg[8], msg[9], msg[10], msg[11]);
         printf("\n");
         printf("TTL:%d\n",msg[12]);
         printf("largoCapaEthernet: %d\n",largoCapaEthernet);
@@ -366,15 +357,44 @@ int main(int argc, char* argv[]){
         msg[12] = msg[12] - 1; //Resta al TTL
 
         if(msg[12] == 0){ //No se renvia el mensaje 
-        printf("Mensaje descartado por TTL\n");
-        printf("TTL:%d\n",msg[12]);
+            printf("Mensaje descartado por TTL\n");
+            printf("TTL:%d\n",msg[12]);
 
         }else{ //Se renvia el mensaje
-        printf("Reenviando...\n");
-        printf("TTL:%d\n",msg[12]);
+            printf("Reenviando...\n");
+            printf("TTL:%d\n",msg[12]);
+
+            BYTE frameEthernetR[largoCapaEthernet + 19];
+
+            for(int i = 0; i < largoCapaEthernet + 19; i++){
+
+                frameEthernetR[i] = msg[i];
+                printf("frameEthernetR: %i\n", frameEthernetR[i]);          
+
+            }
+
+            largoSlipProtocol = contLengthSLIP(frameEthernetR, largoCapaEthernet + 19);
+
+            printf("largoSlipProtocol = %i\n", largoSlipProtocol);
+
+            generateFrameSLIP(frameEthernetR, slipProtocol, largoCapaEthernet + 19);
+
+            for(int i = 0; i < largoSlipProtocol; i++){
+
+                printf("slipProtocol = %i\n", slipProtocol[i]);
+
+            }
+
+            startTransmission();//Se comienza la transmisión]
+
+            while(transmissionStarted){//Delay entre transmisiones 
+                
+                printf("Comenzo la transmision\n");
+                delay(10000);
+
+            }      
 
         }
-
 
     }
 
@@ -626,7 +646,6 @@ void leerBit(){
     int comienzoData = 1; //Se inicializa el comienzo de la data
     int MACdestino = 0;
     bool bit = digitalRead(PinIn); //Se leen los bits del pin
-    int index = 0;
   
     c = (c << 1) | bit; //Se guardan los bits en “c”
 
@@ -637,7 +656,7 @@ void leerBit(){
             B = 0;
             c = 0;
             d = 0;  
-            index = 0;
+            indexR = 0;
             transmissionStarted2 = true;
         }
     }else{
@@ -647,13 +666,12 @@ void leerBit(){
         if(j == 8){
             j = 0;   
 
-            msg[B-index] = c; //Se guarda el byte de “c” en msg[] 
-
+            msg[B-indexR] = c; //Se guarda el byte de “c” en msg[] 
             if(c == C0){ //Se activa con el segundo C0 es decir con el byte de final
                 finished = true;
                 for(int i = 0; i < 100; i++){
-            
-                    printf("MSG[%i]: %i\n", i, msg[i]);
+
+                    printf("MSG[%i] = %i\n", i, msg[i]);
 
                 }
                 return;
@@ -665,16 +683,16 @@ void leerBit(){
             if(d == DB & c == DC){ //Detecta DBDC
                 printf("Se Recibio un: DBDC\n");
                 
-                msg[B-index] = 0; //Transforma el DB en 0 
-                index++;
-                msg[B-index] = C0; //Transforma el DC en C0
+                msg[B-indexR] = 0; //Transforma el DB en 0 
+                indexR++;
+                msg[B-indexR] = C0; //Transforma el DC en C0
             }  
             if(d == DB & c == DD){ //Detecta DBDD
                 printf("Se Recibio un: DBDD\n");
 
-                msg[B-index] = 0; //Transforma el DB en 0
-                index++;
-                msg[B-index] = DB; //Transforma el DD en DB
+                msg[B-indexR] = 0; //Transforma el DB en 0
+                indexR++;
+                msg[B-indexR] = DB; //Transforma el DD en DB
             } 
 
             d = c;  
@@ -688,12 +706,6 @@ bool compararMAC(BYTE MACdestino[6],const char *MAC){
 
     BYTE MACconvertido[6];
     converterMAC(MAC,MACconvertido);
-
-    printf("Mac Convertido\n");
-    for(int i = 0; i < 6 ; i++){
-        printf("%d",MACconvertido[i]);
-    }
-    printf("\n");
 
     int contador = 0;
 
