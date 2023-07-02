@@ -17,6 +17,8 @@ int contNoNullChar(BYTE* array);
 int contFCSByte(BYTE byte);
 int contLengthSLIP(BYTE* frame, int lenghtFrame);
 void generateFrameSLIP(BYTE* frame, BYTE* frameSLIP, int lenghtFrame);
+void startTransmission();
+void sendFrame(void);
 
 char* varTxt[4];
 bool emisor = false;
@@ -24,7 +26,6 @@ int nodo;
 
 volatile int nbits = 0; //Cuenta la cantidad de bits recibidos
 volatile int nbytes = 0; //Cuenta el número de Byte enviados
-bool transmissionStarted = false; //Condicional para el comienzo de la transmisión
 BYTE slipProtocol[100];
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

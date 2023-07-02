@@ -2,10 +2,11 @@ MAC:
 BE:E9:B0:09:BE:E9
 
 PinIn:
-1
+4
 
 PinOut:
 2
 
 Clock:
-3
+0
+
